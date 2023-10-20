@@ -1,5 +1,0 @@
-데이터셋은 roboflow에 올라온 대학 혹은 공공기관의 데이터들을 규합 및 취합하였다.
-
-test:person+knife 총 3196개
-
-train:person+knife 총 69314개
