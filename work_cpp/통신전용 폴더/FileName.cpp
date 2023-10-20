@@ -14,7 +14,7 @@
 #include <ws2tcpip.h>
 
 #pragma comment(lib, "ws2_32")
-int y = 0, k = 0;// flag¿ë º¯¼ö
+int y = 0, k = 0;// flagìš© ë³€ìˆ˜
 SOCKET ServSock = INVALID_SOCKET, ClntSock = INVALID_SOCKET;
 WSADATA wsaData;
 int iResult;
@@ -41,7 +41,7 @@ int main()
            printf("adsadsa\n");
             if (!decodedImage.empty()) {
                 cv::imshow("Received from Raspberry Pi", decodedImage);
-                // ÀüÃ³¸®
+                // ì „ì²˜ë¦¬
                
                 reply_msg = "Processed Img";
 
@@ -54,7 +54,7 @@ int main()
             cv::waitKey(10);
             std::cout << "1" << std::endl;
 
-            // ÀÌ¹ÌÁö ¼ö½Å È®ÀÎÀ» À§ÇØ ÀÀ´äÀ» º¸³À´Ï´Ù.
+            // ì´ë¯¸ì§€ ìˆ˜ì‹  í™•ì¸ì„ ìœ„í•´ ì‘ë‹µì„ ë³´ëƒ…ë‹ˆë‹¤.
             zmq::message_t reply(reply_msg);
             memcpy(reply.data(), reply_msg.c_str(), reply_msg.size());
             socket.send(reply, zmq::send_flags::none);
@@ -65,7 +65,7 @@ int main()
                 break;
             }
         }
-        atexit(LDplayer);
+        atexit(LDplayer); //ì¢…ë£Œì‹œ ì†¡ì‹ í•˜ëŠ” í•¨ìˆ˜
             //socket.close();
     }
     catch (zmq::error_t& e) {
@@ -75,7 +75,6 @@ int main()
         std::cerr << "Exception: " << e.what() << std::endl;
     }
     
-    //closesocket(ClntSock);
     return 0;
 }
 
@@ -83,8 +82,8 @@ void LDplayer(void)
 {
     while (1)
     {
-        const char* cstr = reply_msg.c_str();
-        int len = reply_msg.length(); // ¹®ÀÚ¿­ÀÇ ±æÀÌ °¡Á®¿À±â   
+        const char* cstr = reply_msg.c_str(); // strì„ ë³´ë‚´ë©´ charí˜•ìœ¼ë¡œ ë³€í™˜
+        int len = reply_msg.length(); // ë¬¸ìžì—´ì˜ ê¸¸ì´ ê°€ì ¸ì˜¤ê¸°   
         iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
         ServSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         memset(&servAddr, 0, sizeof(servAddr));
@@ -96,6 +95,7 @@ void LDplayer(void)
         szClntAddr = sizeof(clntAddr);
         ClntSock = accept(ServSock, (SOCKADDR*)&clntAddr, &szClntAddr);
         send(ClntSock, cstr, len, 0);
-        
+        //closesocket(ClntSock);
+        //closesocketí•˜ë©´ LDpalyerì—ì„œ ìˆ˜ì‹  í›„ ë°”ë¡œ ì¢…ë£Œ ì‚¬ì§„ ì´¬ì˜ë“±ì´ í•„ìš”í•˜ë©´ ë„£ì§€ ë§ ê²ƒ
     }
 }
