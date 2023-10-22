@@ -15,25 +15,25 @@
 
 #pragma comment(lib, "ws2_32")
 int y = 0, k = 0;// flag용 변수
-SOCKET ServSock = INVALID_SOCKET, ClntSock = INVALID_SOCKET;
-WSADATA wsaData;
-int iResult;
-SOCKADDR_IN servAddr, clntAddr;
-int szClntAddr, szservAddr;
-std::string reply_msg;
-int str_len;
+SOCKET ServSock = INVALID_SOCKET, ClntSock = INVALID_SOCKET; //통신용 socket선언
+WSADATA wsaData; //윈도우 소켓함수(필수)
+int iResult; //오류확인용 변수
+SOCKADDR_IN servAddr, clntAddr; //주소값
+int szClntAddr, szservAddr; // 주소의 입력값
+std::string reply_msg; //전송확인용 메세지
+int str_len; //글자의 길이
 zmq::message_t message;
-void LDplayer(void);
+void LDplayer(void); //통신 함수
 int main() 
 {
     try {
     
         zmq::context_t context(1);
-        zmq::socket_t socket(context, ZMQ_REP);
-        socket.bind("tcp://*:5000");
+        zmq::socket_t socket(context, ZMQ_REP); //소켓설정
+        socket.bind("tcp://*:5000"); //소켓의 ip와 port설정 => ip는 서버이기 때문에 TCP통신을 한다는 것만 표시 
         while (true)
         {
-            socket.recv(message, zmq::recv_flags::none);
+            socket.recv(message, zmq::recv_flags::none); //소켓에서 정보(통신연결확인)를 받아오는 함수
 
             std::vector<uchar> data(message.size());
             memcpy(data.data(), message.data(), message.size());
@@ -49,6 +49,7 @@ int main()
 
             else {
                 reply_msg = "Received Empty Img";
+                break;
             }
             printf("adsa2\n");
             cv::waitKey(10);
@@ -56,16 +57,16 @@ int main()
 
             // 이미지 수신 확인을 위해 응답을 보냅니다.
             zmq::message_t reply(reply_msg);
-            memcpy(reply.data(), reply_msg.c_str(), reply_msg.size());
-            socket.send(reply, zmq::send_flags::none);
-            printf("adsadsa3\n");
+            memcpy(reply.data(), reply_msg.c_str(), reply_msg.size()); // 통신확인용 socket초기화
+            socket.send(reply, zmq::send_flags::none); // 통신확인을 위한 전송함수 이 문구를 지우면 통신이 되지않음
+            printf("adsadsa3\n"); // 전송완료 검증용 release 버전에서는 제거 바람
             char key = (char)cv::waitKey(30);
             if (key == 'q' || key == 27)
             {
                 break;
             }
         }
-        atexit(LDplayer); //종료시 송신하는 함수
+        atexit(LDplayer); //종료시 송신하는 함수 단 q로 종료해야지 발동함
             //socket.close();
     }
     catch (zmq::error_t& e) {
@@ -78,7 +79,7 @@ int main()
     return 0;
 }
 
-void LDplayer(void)
+void LDplayer(void) //zmq방식에서는 socket의 중복이 발생할 수 있기 때문에 별도의 socket(ip:10.10.141.22/port:5001)을 제작함
 {
     while (1)
     {
@@ -88,14 +89,13 @@ void LDplayer(void)
         ServSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         memset(&servAddr, 0, sizeof(servAddr));
         servAddr.sin_family = AF_INET; // address family Internet
-        servAddr.sin_port = htons(5001); //Port to connect on
-        inet_pton(AF_INET, "10.10.141.22", &servAddr.sin_addr);
-        bind(ServSock, (SOCKADDR*)&servAddr, sizeof(servAddr));
-        listen(ServSock, 5);
+        servAddr.sin_port = htons(5001); //Port
+        inet_pton(AF_INET, "10.10.141.22", &servAddr.sin_addr);// ip설정
+        bind(ServSock, (SOCKADDR*)&servAddr, sizeof(servAddr)); //socket bind
+        listen(ServSock, 5); //연결 갯 수 조정
         szClntAddr = sizeof(clntAddr);
         ClntSock = accept(ServSock, (SOCKADDR*)&clntAddr, &szClntAddr);
         send(ClntSock, cstr, len, 0);
-        //closesocket(ClntSock);
-        //closesocket하면 LDpalyer에서 수신 후 바로 종료 사진 촬영등이 필요하면 넣지 말 것
+        //closesocket(ClntSock); //closesocket하면 LDpalyer에서 수신 후 바로 종료 사진 촬영등이 필요하면 넣지 말 것
     }
 }
