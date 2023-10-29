@@ -20,7 +20,7 @@ while True:
         msg = sock.recv_string(flags=zmq.NOBLOCK)
         img = np.frombuffer(msg, dtype=np.uint8)
         img = cv2.imdecode(img, cv2.IMREAD_COLOR)
-        #ÀüÃ³¸® ³¡³­ °ªÀ» ÀúÀåº¯¼ö´Â data¶ó°í°¡Á¤
+        #ì „ì²˜ë¦¬ ëë‚œ ê°’ì„ ì €ì¥ë³€ìˆ˜ëŠ” dataë¼ê³ ê°€ì •
         # Display the image
         cv2.imshow('Image', img)
         
@@ -33,7 +33,23 @@ while True:
         break
 while False:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect(('10.10.141.22', 5001))     # Á¢¼ÓÇÒ ¼­¹öÀÇ ipÁÖ¼Ò¿Í Æ÷Æ®¹øÈ£¸¦ ÀÔ·Â.
+    sock.connect(('10.10.141.22', 5001))     # ì ‘ì†í•  ì„œë²„ì˜ ipì£¼ì†Œì™€ í¬íŠ¸ë²ˆí˜¸ë¥¼ ì…ë ¥.
     sock.send(data.encode())
+"""
+#ìŠ¤ë§ˆíŠ¸í°ì— smsë¡œ ê²°ê³¼ ê°’ì„ ë³´ë‚´ëŠ” ì½”ë“œ
+from twilio.rest import Client
+
+account_sid = 'AC830601052a526b757f23cac741e8becb'
+auth_token = 'token ' # ë‚˜ì¤‘ì— ì…ë ¥
+client = Client(account_sid, auth_token)
+
+message = client.messages.create(
+  from_='+12563685788',
+  body=data,encode(),
+  to='+821031198106'
+)
+
+print(message.sid)
+"""
 
 cv2.destroyAllWindows()
