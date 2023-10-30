@@ -15,7 +15,7 @@ def preprocess_image(image):
     return dst_img
 
 # 컴퓨터 카메라, 영상을 사용할 경우
-file_path = 'C:/Users/iot24/proj/test/video_sample/parking_2.avi'
+file_path = 'C:/Users/iot24/intel_textRecog/test/video_sample/G_well.avi'
 cap = cv2.VideoCapture(file_path)
 if not cap.isOpened():
     exit
@@ -64,7 +64,7 @@ while True:
         cv2.imshow('video', frame)
         
         # waitKey() = REP & REQ 프로토콜 유지(다음 프레임 전까지 send respond)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(10) & 0xFF == ord('q'):
             break
             
 #많이 검출된 단어 뽑기
@@ -72,6 +72,7 @@ if detected_words:
     most_detected_words = max(detected_words, key=detected_words.get)
     #여기에 서버로 단어 전송할 코드
     print(most_detected_words)
+    print(detected_words[most_detected_words])
     
 cap.release()
 cv2.destroyAllWindows()

@@ -28,17 +28,40 @@ def preprocess_image(img):
     
     return dst_img
 
-#많이 검출된 단어 뽑아서 전송
-def send_string(floorWords, locationWords):
-    most_detfloorWords = max(floorWords, key=floorWords.get)
-    most_detlocationWords = max(locationWords, key=locationWords.get)
+# 많이 검출된 단어 뽑기
+def detect_word(detected_words): 
+    most_detected_words = max(detected_words, key=detected_words.get)
     
-    #여기에 서버로 단어 전송할 코드
+    print("result: ", most_detected_words)
+    print(detected_words[most_detected_words])
     
+    return most_detected_words
     
-    print("result: ", most_detlocationWords)
-    print("floor: ", most_detfloorWords)
-
+# 서버로 단어 전송할 코드
+def send_string(most_detfloorWords, most_detlocationWords):
+    data= '차량의 위치는 {}층 {}구역입니다.'.format(most_detfloorWords, most_detlocationWords)
+    
+    #데이터 전송 = TCP
+    sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock2.connect(('10.10.141.52', 5001)) # 접속할 서버의 ip주소와 포트번호를 입력.
+    sock2.send(data.encode())
+    
+    # 모바일 전송 코드
+    """
+    account_sid = 'AC830601052a526b757f23cac741e8becb'
+    auth_token = 'token'
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+        from_='+12563685788',
+        body=data1.encode(),
+        to='+821031198106'
+    )
+    print("data")
+    """
+    
+    #cv2.waitKey(1000)
+    
+    sock2.close()
 
 # PaddleOCR 호출 및 옵션 설정(cuda 가속 여부, 언어, inference모델)
 ocr = PaddleOCR(
@@ -66,6 +89,10 @@ roi_x_start = (int)(width / 20)
 roi_y_start = (int)(height / 8)
 roi_width = (int)(width * 9 / 10)
 roi_height = (int)(height / 2)
+
+# 제일 많이 인식한 단어들
+most_detfloorWords = "None"
+most_detlocationWords = "None"
 
 try:
     while True:
@@ -122,12 +149,22 @@ try:
         # waitKey() = 프레임 조절
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+            
     
-    # 텍스트 send
-    send_string(floorWords, locationWords)
+    # 텍스트 send - 텍스트가 검출되지 않았을 경우 None으로 대체
+    if floorWords:
+        most_detfloorWords = detect_word(floorWords)
+        
+    if locationWords:
+        most_detlocationWords = detect_word(locationWords)
+    
+    # 클라이언트에게 텍스트 전송
+    send_string(most_detfloorWords, most_detlocationWords)
+    
  
 # 오류 catch 
 except Exception as e:
     print(f"Exception: {str(e)}")
 
+sock.close()
 cv2.destroyAllWindows()
