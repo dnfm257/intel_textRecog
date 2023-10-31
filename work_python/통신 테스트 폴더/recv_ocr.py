@@ -39,7 +39,9 @@ def send_string(floorWords, locationWords):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(('10.10.141.22', 5001))     # 접속할 서버의 ip주소와 포트번호를 입력.
     sock.send(data1.encode())
+    """
     
+    """
     print("result: ", most_detlocationWords)
     print("floor: ", most_detfloorWords)
 
