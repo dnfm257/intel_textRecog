@@ -3,7 +3,7 @@ import cv2
 import socket
 import numpy as np
 from collections import defaultdict
-
+#from twilio.rest import Client
 # byte로 받은 데이터를 img에 맞게 변환
 def convert_img(data):
     data_arr = np.frombuffer(data, np.uint8) # numpy로 저장
@@ -40,7 +40,15 @@ def send_string(floorWords, locationWords):
     sock.connect(('10.10.141.22', 5001))     # 접속할 서버의 ip주소와 포트번호를 입력.
     sock.send(data1.encode())
     """
-    
+    account_sid = 'AC830601052a526b757f23cac741e8becb'
+    auth_token = 'token'
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+        from_='+12563685788',
+        body=data1.encode(),
+        to='+821031198106'
+    )
+    print("data")
     """
     print("result: ", most_detlocationWords)
     print("floor: ", most_detfloorWords)
