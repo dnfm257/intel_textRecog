@@ -32,8 +32,10 @@ def preprocess_image(img):
 def send_string(floorWords, locationWords):
     most_detfloorWords = max(floorWords, key=floorWords.get)
     most_detlocationWords = max(locationWords, key=locationWords.get)
+    #통신코드
+    #데이터 통합
     data1= '차량의 위치는 {}층 {}구역입니다.'.format(most_detfloorWords, most_detlocationWords)
-    #여기에 서버로 단어 전송할 코드
+    #데이터 전송
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(('10.10.141.22', 5001))     # 접속할 서버의 ip주소와 포트번호를 입력.
     sock.send(data1.encode())
