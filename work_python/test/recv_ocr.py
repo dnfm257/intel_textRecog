@@ -28,6 +28,13 @@ def preprocess_image(img):
     
     return dst_img
 
+# 화면에 표시
+#def text_box(words, confidence, st_x, st_y, ed_x, ed_y)
+
+# 넓이 구하기
+def find_area(st_x, st_y, ed_x, ed_y):
+    return (int)(abs(ed_x - st_x) * abs(ed_y - st_y))
+
 # 많이 검출된 단어 뽑기
 def detect_word(detected_words): 
     most_detected_words = max(detected_words, key=detected_words.get)
@@ -43,7 +50,7 @@ def send_string(most_detfloorWords, most_detlocationWords):
     
     #데이터 전송 = TCP
     sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock2.connect(('10.10.141.52', 5001)) # 접속할 서버의 ip주소와 포트번호를 입력.
+    sock2.connect(('10.10.141.22', 6001)) # 접속할 서버의 ip주소와 포트번호를 입력.
     sock2.send(data.encode())
     
     # 모바일 전송 코드
@@ -98,7 +105,7 @@ try:
     while True:
         data, addr = sock.recvfrom(buf_size) # 메세지(이미지) 받기
         
-        img = convert_img(data) # 받은 메세지 byte -> img 형태로 변환
+        img = convert_img(data) # 받은 메세지 byte -> img 형q태로 변환
         
         if img is not None:
             frame = cv2.resize(img, (width, height), cv2.INTER_CUBIC) # 해상도 조절
@@ -114,20 +121,24 @@ try:
             # PaddleOCR 적용
             result = ocr.ocr(pre_img, cls=True)
     
-            print(result[0]) # [[(x, y), (x, y), (x, y), (x, y)], [words, confidence]] 순서로 저장
+            #print(result) # [[(x, y), (x, y), (x, y), (x, y)], [words, confidence]] 순서로 저장
     
             if result[0] is not None: # 텍스트 인식한 게 있다면
+                print(len(result[0])) # 여기서 늘어남(수정요청)
                 for line in result[0]:
                     (k1_x, k1_y), (k2_x, k2_y), (k3_x, k3_y), (k4_x, k4_y) = line[0]
+                    words, confidence = line[1]
                     
                     # 좌상단 = min, 우하단 = max 좌표
                     (ed_x, ed_y) = max((k1_x, k1_y), (k2_x, k2_y), (k3_x, k3_y), (k4_x, k4_y))
                     (st_x, st_y) = min((k1_x, k1_y), (k2_x, k2_y), (k3_x, k3_y), (k4_x, k4_y))
-            
-                    words, confidence = line[1]
                     
-                    # 인식 길이가 3 이상인 단어는 버림
-                    if len(words) > 3:
+                    # 인식 길이가 3 이상인 단어 or 감지 못한 단어는 무시
+                    if len(words) > 3 or words == "None":
+                        continue
+                    
+                    # 텍스트 넓이가 특정 이하인 검출은 무시
+                    if find_area(st_x, st_y, ed_x, ed_y) < 100:
                         continue
                     
                     print(words)
@@ -138,8 +149,8 @@ try:
                         floorWords[words] += 1 # 층수
                     else:
                         locationWords[words] += 1 # 구역
-                    
-                    # 화면에 표시
+                        
+                    # 좌표 구해서 텍스트 box만들기
                     str = words + " {:.2f}".format(confidence)
                     cv2.rectangle(frame, (int(st_x+roi_x_start), int(st_y+roi_y_start)), (int(ed_x+roi_x_start), int(ed_y+roi_y_start)), (0, 255, 0), 2)
                     cv2.putText(frame, str, (int(st_x+roi_x_start), int(st_y+roi_y_start - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
@@ -159,7 +170,7 @@ try:
         most_detlocationWords = detect_word(locationWords)
     
     # 클라이언트에게 텍스트 전송
-    send_string(most_detfloorWords, most_detlocationWords)
+    #send_string(most_detfloorWords, most_detlocationWords)
     
  
 # 오류 catch 
