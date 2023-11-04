@@ -18,7 +18,7 @@
 
 ## 구상도
 
-<img src="/image/img_1.png>
+<img src="/image/img_1.png">
 
 
 ## 
