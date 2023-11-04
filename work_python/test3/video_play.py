@@ -29,10 +29,6 @@ def preprocess_image(img):
     return dst_img
 
 
-# 넓이 구하기
-def find_area(st_x, st_y, ed_x, ed_y):
-    return (int)(abs(ed_x - st_x) * abs(ed_y - st_y))
-
 # 많이 검출된 단어 찾기
 def detect_word(detected_words): 
     most_detected_words = max(detected_words, key=detected_words.get)
@@ -111,22 +107,18 @@ try:
                 
                 # result[0][] = line 한 장면에서 검출된 단어 개수만큼
                 for line in result[0]:
-                    (k1_x, k1_y), (k2_x, k2_y), (k3_x, k3_y), (k4_x, k4_y) = line[0]
+                    points = np.array([line[0][0], line[0][1], line[0][2], line[0][3]], dtype=np.int0)
                     words, confidence = line[1]
-                    
-                    # 좌상단 = min, 우하단 = max 좌표
-                    (ed_x, ed_y) = max((k1_x, k1_y), (k2_x, k2_y), (k3_x, k3_y), (k4_x, k4_y))
-                    (st_x, st_y) = min((k1_x, k1_y), (k2_x, k2_y), (k3_x, k3_y), (k4_x, k4_y))
                     
                     # 인식단어 길이가 1 이상, 3 이하인 단어만 통과
                     if len(words) < 1 or len(words) > 3:
                         continue
                     
-                    #print(words)
-                    #print(confidence)
+                    # 텍스트 위치에서 가장 작은 사각형 찾기
+                    x, y, w, h = cv2.boundingRect(points)
                         
                     # 텍스트 넓이 저장
-                    area[words] = find_area(st_x, st_y, ed_x, ed_y)
+                    area[words] = w * h
                     
                 # 해당 장면에서 넓이가 제일 넓은 단어만 추출
                 if area:
@@ -140,8 +132,9 @@ try:
                     
                 # 좌표 구해서 텍스트 box만들기
                 str = area_word #+ " {:.2f}".format(confidence)
-                cv2.rectangle(frame, (int(st_x+roi_x_start), int(st_y+roi_y_start)), (int(ed_x+roi_x_start), int(ed_y+roi_y_start)), (0, 255, 0), 2)
-                cv2.putText(frame, str, (int(st_x+roi_x_start), int(st_y+roi_y_start - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                real_x, real_y = (int)(x + roi_x_start), (int)(y + roi_y_start)
+                cv2.rectangle(frame, (real_x, real_y), (real_x+w, real_y+h), (0, 255, 0), 2)
+                cv2.putText(frame, str, (real_x, real_y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
   
             cv2.imshow('video', frame)
             
