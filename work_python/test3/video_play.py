@@ -28,7 +28,6 @@ def preprocess_image(img):
     
     return dst_img
 
-
 # 많이 검출된 단어 찾기
 def detect_word(detected_words): 
     most_detected_words = max(detected_words, key=detected_words.get)
@@ -47,9 +46,9 @@ def most_area_word(area):
     
 # PaddleOCR 호출 및 옵션 설정(cuda 가속 여부, 언어, inference모델)
 ocr = PaddleOCR(
-    use_gpu=False, 
+    use_gpu=True, 
     gpu_id=0, 
-    cpu_threads=14, 
+    #cpu_threads=14, 
     use_angle_cls=True, 
     lang="en")
 
@@ -72,7 +71,7 @@ most_detfloorWords = "None"
 most_detlocationWords = "None"
 
 # 컴퓨터 카메라, 영상을 사용할 경우
-file_path = 'D:/intel2_firmware/GitHub/video_sample/lotte_outlet.avi'
+file_path = '../video_sample/lotte_outlet.avi'
 cap = cv2.VideoCapture(file_path)
 if not cap.isOpened():
     exit
@@ -81,62 +80,61 @@ try:
     while True:
         ret, img = cap.read()
         
-        if not ret:
+        if not ret or img is None:
             print("videos not found")
             break
         
-        if img is not None:
-            frame = cv2.resize(img, (width, height), cv2.INTER_LINEAR) # 해상도 조절
+        frame = cv2.resize(img, (width, height), cv2.INTER_CUBIC) # 해상도 조절
             
-            # ROI(관심영역) 설정
-            ROI = frame[roi_y_start: roi_y_start+roi_height, roi_x_start: roi_x_start+roi_width]
+        # ROI(관심영역) 설정
+        ROI = frame[roi_y_start: roi_y_start+roi_height, roi_x_start: roi_x_start+roi_width]
         
-            # 전처리
-            pre_img = preprocess_image(ROI)
+        # 전처리
+        pre_img = preprocess_image(ROI)
+        cv2.imshow('detect', pre_img)
+    
+        # PaddleOCR 적용
+        result = ocr.ocr(pre_img, cls=True) # [[(x, y), (x, y), (x, y), (x, y)], [words, confidence]] 순서로 저장
             
-            cv2.imshow('detect', pre_img)
-    
-            # PaddleOCR 적용
-            result = ocr.ocr(pre_img, cls=True)
-    
-            #print(result) # [[(x, y), (x, y), (x, y), (x, y)], [words, confidence]] 순서로 저장
-                      
-            if result[0] is not None: # 텍스트 인식한 게 있다면
+        # 텍스트 인식한 게 있다면
+        if result[0] is not None:
                 
-                area = defaultdict(int) # 넓이 저장
+            area = defaultdict(int) # 넓이 저장
                 
-                # result[0][] = line 한 장면에서 검출된 단어 개수만큼
-                for line in result[0]:
-                    points = np.array([line[0][0], line[0][1], line[0][2], line[0][3]], dtype=np.int0)
-                    words, confidence = line[1]
+            # 프레임 한장에 나오는 단어 개수만큼
+            for line in result[0]:
+                points = np.array([line[0][0], line[0][1], line[0][2], line[0][3]], dtype=np.int0)
+                word, confidence = line[1]
                     
-                    # 인식단어 길이가 1 이상, 3 이하인 단어만 통과
-                    if len(words) < 1 or len(words) > 3:
-                        continue
+                # 인식단어 길이가 2 이상 4 이하인 단어만 통과
+                if len(word) < 2 or len(word) > 4:
+                    continue
                     
-                    # 텍스트 위치에서 가장 작은 사각형 찾기
-                    x, y, w, h = cv2.boundingRect(points)
+                # 텍스트 위치에서 가장 작은 사각형 찾기
+                x, y, w, h = cv2.boundingRect(points)
+                    
+                # 텍스트 넓이 저장
+                area[word] = w * h
+                    
+            # 해당 장면에서 넓이가 제일 넓은 단어만 추출
+            if area:
+                frame_word = most_area_word(area)
+            else: # 예외 : 길이가 짧은 단어만 검출됐을 경우
+                continue
+                    
+            # 단어(key)에 대한 카운트(value)
+            if frame_word[0] == 'B' or frame_word[len(frame_word) - 1] == 'F':
+                floorWords[frame_word] += 1 # 층수
+            else:
+                locationWords[frame_word] += 1 # 구역
                         
-                    # 텍스트 넓이 저장
-                    area[words] = w * h
-                    
-                # 해당 장면에서 넓이가 제일 넓은 단어만 추출
-                if area:
-                    area_word = most_area_word(area)
-                
-                # 단어(key)에 대한 카운트(value)
-                if area_word[0] == 'B' or area_word[len(area_word) - 1] == 'F':
-                    floorWords[area_word] += 1 # 층수
-                else:
-                    locationWords[area_word] += 1 # 구역
-                    
-                # 좌표 구해서 텍스트 box만들기
-                str = area_word #+ " {:.2f}".format(confidence)
-                real_x, real_y = (int)(x + roi_x_start), (int)(y + roi_y_start)
-                cv2.rectangle(frame, (real_x, real_y), (real_x+w, real_y+h), (0, 255, 0), 2)
-                cv2.putText(frame, str, (real_x, real_y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            # 텍스트 box만들기
+            str = frame_word #+ " {:.2f}".format(confidence)
+            real_x, real_y = (int)(x + roi_x_start), (int)(y + roi_y_start)
+            cv2.rectangle(frame, (real_x, real_y), (real_x+w, real_y+h), (0, 255, 0), 2)
+            cv2.putText(frame, str, (real_x, real_y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
   
-            cv2.imshow('video', frame)
+        cv2.imshow('video', frame)
             
         # waitKey() = 프레임 조절
         if cv2.waitKey(1) & 0xFF == ord('q'):
