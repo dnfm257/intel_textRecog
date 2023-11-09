@@ -109,12 +109,12 @@ sock2.connect(('10.10.141.22', 6001)) # 접속할 서버의 ip주소와 포트�
 ```
 #### User(Twilio) 정보 수정
 ```py
-account_sid = 'AC830601052a526b757f23cac741e8becb'
-    auth_token = '' #보안 이슈로 나중에 입력
-    client = Client(account_sid, auth_token)
-    message = client.messages.create(
-        from_='+12563685788',
-        body=data.encode(),
-        to='+821031198106'
+account_sid = '' #본인의 sid
+auth_token = '' #본인의 token
+client = Client(account_sid, auth_token)
+message = client.messages.create(
+        from_='+12563685788', # Twilio에서 배정받은 번호
+        body=data.encode(), #보내고 싶은 문자 및 이미지
+        to='+821031198106' # 받는 전화번호
     )
 ```
