@@ -89,8 +89,8 @@ pip install pyzmq
   - 서버에서 다른 클라이언트와의 연결  
 ### 2) TCP client.py
   - client로 부터 메세지를 보내는 코드
-  
-##SMS 전송용 프로그램 Twilio 적용방법  
+
+#### Twilio 적용방법
 ```sh
 pip install twilio
 ```
