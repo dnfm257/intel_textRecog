@@ -87,3 +87,7 @@ pip install pyzmq
 
 ### 1) server1.py
   - 서버에서 다른 클라이언트와의 연결
+###SMS 전송용 프로그램 Twilio 적용방법
+```sh
+pip install twilio
+```
