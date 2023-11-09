@@ -86,11 +86,35 @@ pip install pyzmq
 ## 3. 통신 테스트 폴더
 
 ### 1) server1.py
-  - 서버에서 다른 클라이언트와의 연결  
+  - 서버에서 다른 클라이언트와의 연결
+#### User(server) ip 수정
+```py
+ # 소켓에 IP 주소와 포트 번호를 바인드합니다.
+    server_socket.bind(('10.10.141.22', 6001))
+```
+```py
+data_A = client_socket.recv(1024) #buffer크기 수정
+``` 
 ### 2) TCP client.py
   - client로 부터 메세지를 보내는 코드
 
 #### Twilio 적용방법
 ```sh
 pip install twilio
+```
+#### User(클라이언트) ip 수정
+```py
+data = (f'차량의 위치는 none층 none구역입니다.')# none에 측정한 값 대입
+sock2.connect(('10.10.141.22', 6001)) # 접속할 서버의 ip주소와 포트번호를 입력.
+```
+#### User(Twilio) 정보 수정
+```py
+account_sid = 'AC830601052a526b757f23cac741e8becb'
+    auth_token = '' #보안 이슈로 나중에 입력
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+        from_='+12563685788',
+        body=data.encode(),
+        to='+821031198106'
+    )
 ```
