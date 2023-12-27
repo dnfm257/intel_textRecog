@@ -22,3 +22,8 @@
 
 
 ## 
+
+---
+왜? python의 Paddle OCR을 사용하는가
+![image](https://github.com/dnfm257/intel_textRecog/assets/143377935/fad35dbe-c4d0-44d9-942e-b38666e31b1f)
+---
